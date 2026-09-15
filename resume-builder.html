@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATS Resume Builder – Abhi Talks Here</title>
+  <meta name="description" content="Build a professional ATS-friendly resume in minutes using AI. Free tool by Abhi Talks Here." />
+
+  <!-- React + Babel from CDN — no build step needed -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f5f6ff; min-height: 100vh; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); animation: fadein 0.25s ease; }
+    input, textarea { width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: inherit; color: #111827; background: #fff; outline: none; transition: border-color 0.15s; resize: vertical; }
+    input:focus, textarea:focus { border-color: #5b6af0; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+    .hint { font-size: 11px; color: #9ca3af; margin-bottom: 5px; }
+    .field { margin-bottom: 14px; }
+    .section-label { font-size: 11px; font-weight: 700; color: #8b90a0; letter-spacing: 1.1px; margin-bottom: 12px; text-transform: uppercase; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .span-2 { grid-column: 1 / -1; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } .span-2 { grid-column: 1; } }
+    button { cursor: pointer; font-family: inherit; }
+    .btn-primary { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #5b6af0, #7c3aed); color: #fff; font-weight: 800; font-size: 16px; letter-spacing: 0.3px; box-shadow: 0 4px 14px rgba(91,106,240,0.35); transition: opacity 0.15s; margin-bottom: 32px; }
+    .btn-primary:hover { opacity: 0.9; }
+    pre { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.8; color: #1e1e2e; }
+    .role-card { border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 14px; background: #fafafa; position: relative; }
+    .role-label { font-size: 12px; font-weight: 700; color: #5b6af0; margin-bottom: 10px; }
+    .remove-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #ef4444; font-size: 20px; line-height: 1; }
+    .add-role-btn { width: 100%; padding: 9px; border-radius: 8px; border: 1.5px dashed #c7d2fe; background: #f5f6ff; color: #4752c4; font-weight: 600; font-size: 13px; }
+    .badge { background: #eef0ff; color: #4752c4; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 2px 8px; letter-spacing: 0.3px; }
+    .error-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 16px; color: #dc2626; font-size: 13px; margin-bottom: 14px; }
+    .exp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    /* Photo uploader */
+    .photo-zone { border: 2px dashed #c7d2fe; border-radius: 12px; background: #f8f8ff; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.18s; }
+    .photo-zone:hover, .photo-zone.drag { border-color: #5b6af0; background: #eef0ff; }
+    .photo-preview { display: flex; align-items: center; gap: 16px; }
+    .photo-circle { width: 84px; height: 84px; border-radius: 50%; overflow: hidden; border: 3px solid #5b6af0; box-shadow: 0 2px 10px rgba(91,106,240,0.25); flex-shrink: 0; }
+    .photo-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-change { padding: 5px 12px; font-size: 12px; font-weight: 600; border: 1.5px solid #5b6af0; border-radius: 7px; background: #eef0ff; color: #4752c4; }
+    .btn-remove { padding: 5px 12px; font-size: 12px; font-weight: 600; border: 1.5px solid #fca5a5; border-radius: 7px; background: #fef2f2; color: #dc2626; }
+    /* Result page */
+    .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .result-actions { display: flex; gap: 10px; }
+    .btn-back { padding: 9px 18px; border-radius: 8px; border: 1.5px solid #d1d5db; background: #fff; color: #374151; font-weight: 600; font-size: 13px; }
+    .btn-copy { padding: 9px 18px; border-radius: 8px; border: none; background: #5b6af0; color: #fff; font-weight: 700; font-size: 13px; transition: background 0.2s; }
+    .btn-copy.copied { background: #16a34a; }
+    .ats-tip { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px; }
+    .next-step { background: #eef0ff; border-radius: 12px; padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; }
+    .resume-card { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 40px 44px; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .resume-photo-header { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid #1e1e2e; }
+    .resume-photo-circle { width: 96px; height: 96px; border-radius: 50%; overflow: hidden; border: 3px solid #5b6af0; flex-shrink: 0; box-shadow: 0 2px 12px rgba(91,106,240,0.2); }
+    .resume-photo-circle img { width: 100%; height: 100%; object-fit: cover; }
+    /* Loading */
+    #loading-view { display: none; align-items: center; justify-content: center; min-height: 100vh; }
+    .spinner-wrap { text-align: center; }
+    .spinner { animation: spin 1s linear infinite; }
+    /* Page sections */
+    #form-view { padding: 28px 16px; }
+    #result-view { padding: 32px 16px; display: none; }
+    .page-max { max-width: 700px; margin: 0 auto; }
+    .page-max-wide { max-width: 780px; margin: 0 auto; }
+    /* Branding */
+    .brand-tag { font-size: 11px; color: #9ca3af; text-align: center; margin-top: 12px; margin-bottom: 4px; }
+    .brand-tag a { color: #5b6af0; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOADING ══ -->
+<div id="loading-view" style="display:none; align-items:center; justify-content:center; min-height:100vh;">
+  <div class="spinner-wrap">
+    <svg class="spinner" width="36" height="36" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="14" fill="none" stroke="#dde1ff" stroke-width="4"/>
+      <path d="M18 4 a14 14 0 0 1 14 14" fill="none" stroke="#5b6af0" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <div style="margin-top:14px; color:#5b6af0; font-weight:700; font-size:15px;">Building your resume with AI…</div>
+    <div style="margin-top:6px; color:#9ca3af; font-size:13px;">Crafting achievement bullets, weaving in keywords…</div>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="result-view" style="display:none; padding:32px 16px;">
+  <div class="page-max-wide">
+    <div class="result-header">
+      <div>
+        <div style="font-size:22px; font-weight:800; color:#1e1e2e;">Your ATS Resume</div>
+        <div style="font-size:13px; color:#6b7280; margin-top:2px;">Clean, keyword-optimized · ready to paste into Word or PDF</div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-back" onclick="showForm()">← Start Over</button>
+        <button class="btn-copy" id="copy-btn" onclick="copyResume()">Copy Resume</button>
+      </div>
+    </div>
+    <div class="ats-tip" id="photo-tip" style="display:none;">
+      <span style="font-size:16px;">💡</span>
+      <span><strong>Photo tip:</strong> Your photo is shown below for visual/PDF resumes. For ATS job portal submissions, paste only the plain text — most ATS systems ignore or reject embedded images.</span>
+    </div>
+    <div class="resume-card">
+      <div class="resume-photo-header" id="result-photo-header" style="display:none;">
+        <div class="resume-photo-circle"><img id="result-photo-img" src="" alt="Profile" /></div>
+        <div>
+          <div id="result-name-display" style="font-size:22px; font-weight:800; color:#1e1e2e; margin-bottom:4px; font-family:sans-serif;"></div>
+          <div style="font-size:11px; color:#5b6af0; font-weight:600;">↑ Photo shown in visual/PDF version only</div>
+        </div>
+      </div>
+      <pre id="resume-output"></pre>
+    </div>
+    <div class="next-step">
+      <div style="font-size:22px;">🎯</div>
+      <div>
+        <div style="font-weight:700; color:#3730a3; font-size:14px; margin-bottom:4px;">Next Step: ATS Optimizer</div>
+        <div style="font-size:13px; color:#4338ca; line-height:1.6;">Paste a specific job description and I'll score your resume against it, identify missing keywords, and suggest targeted edits to maximize your match rate for that posting.</div>
+      </div>
+    </div>
+    <div class="brand-tag">Built with ❤️ by <a href="https://abhijithpbinu.github.io/abhitalkshere/" target="_blank">Abhi Talks Here</a></div>
+  </div>
+</div>
+
+<!-- ══ FORM ══ -->
+<div id="form-view" style="padding:28px 16px;">
+  <div class="page-max">
+
+    <!-- Header -->
+    <div style="text-align:center; margin-bottom:28px;">
+      <div style="font-size:26px; font-weight:900; color:#1e1e2e; letter-spacing:-0.5px;">ATS Resume Builder</div>
+      <div style="font-size:14px; color:#6b7280; margin-top:6px; line-height:1.5;">Fill in your details — AI turns them into a polished, keyword-rich resume</div>
+      <button onclick="fillExample()" style="margin-top:14px; padding:8px 20px; border-radius:8px; border:1.5px dashed #5b6af0; background:#eef0ff; color:#4752c4; font-weight:700; font-size:12px; letter-spacing:0.3px;">✨ Auto-fill with example data</button>
+      <div class="brand-tag" style="margin-top:10px;">by <a href="https://abhijithpbinu.github.io/abhitalkshere/" target="_blank">Abhi Talks Here</a></div>
+    </div>
+
+    <!-- Contact + Photo -->
+    <div class="card">
+      <div class="section-label">Contact Information &amp; Photo</div>
+      <!-- Photo box -->
+      <div style="background:#f8f8ff; border:1px solid #e0e3ff; border-radius:10px; padding:16px 18px; margin-bottom:20px;">
+        <label>Profile Photo <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+        <div class="hint">Shown on your resume preview. Note: most ATS systems are text-only — photo is for PDF/Word versions.</div>
+        <div id="photo-dropzone" class="photo-zone" onclick="document.getElementById('photo-file').click()"
+          ondragover="event.preventDefault(); this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <div style="font-size:32px; margin-bottom:8px;">🖼️</div>
+          <div style="font-size:13px; font-weight:600; color:#4752c4; margin-bottom:4px;">Click to upload or drag &amp; drop</div>
+          <div style="font-size:11px; color:#9ca3af;">JPG, PNG, WEBP · Max 5MB · Square crop recommended</div>
+        </div>
+        <div id="photo-preview-box" class="photo-preview" style="display:none;">
+          <div class="photo-circle"><img id="photo-preview-img" src="" alt="Profile" /></div>
+          <div>
+            <div id="photo-filename" style="font-size:13px; font-weight:600; color:#374151; margin-bottom:2px;"></div>
+            <div style="font-size:11px; color:#6b7280; margin-bottom:8px;">Photo uploaded successfully ✓</div>
+            <div class="photo-actions">
+              <button class="btn-change" onclick="document.getElementById('photo-file').click()">Change</button>
+              <button class="btn-remove" onclick="removePhoto()">Remove</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="photo-file" accept="image/*" style="display:none;" onchange="handlePhotoFile(this.files[0])"/>
+      </div>
+
+      <!-- Contact fields -->
+      <div class="grid-2">
+        <div class="field"><label>Full Name *</label><input id="fullName" placeholder="Jane Smith" /></div>
+        <div class="field"><label>Phone *</label><input id="phone" placeholder="+91 98765 43210" /></div>
+        <div class="field"><label>Email *</label><input id="email" type="email" placeholder="jane@email.com" /></div>
+        <div class="field"><label>City, State *</label><input id="location" placeholder="Thiruvananthapuram, Kerala" /></div>
+        <div class="field span-2"><label>LinkedIn <span style="font-weight:400;color:#9ca3af;">(optional)</span></label><input id="linkedin" placeholder="linkedin.com/in/yourname" /></div>
+      </div>
+      <div class="field">
+        <label>Target Job Title / Industry *</label>
+        <div class="hint">AI will tailor keywords and tone to this role</div>
+        <input id="targetJob" placeholder="e.g. Senior Software Engineer – FinTech" />
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <div class="section-label">Professional Summary</div>
+      <div class="field">
+        <label>Key points about your background</label>
+        <div class="hint">Leave blank and AI will draft one based on your experience</div>
+        <textarea id="summaryPoints" rows="3" placeholder="e.g. 5 years in software development. Led full-stack product builds. Strong problem-solving skills."></textarea>
+      </div>
+    </div>
+
+    <!-- Experience -->
+    <div class="card">
+      <div class="exp-header">
+        <div class="section-label" style="margin-bottom:0;">Work Experience</div>
+        <span class="badge" id="role-count">1 role</span>
+      </div>
+      <div id="experience-list"></div>
+      <button class="add-role-btn" onclick="addRole()">+ Add Another Role</button>
+    </div>
+
+    <!-- Education + Skills + Certs -->
+    <div class="card">
+      <div class="section-label">Education, Skills &amp; Certifications</div>
+      <div class="field">
+        <label>Education *</label>
+        <div class="hint">Institution | Degree | Graduation date · one per line for multiple</div>
+        <textarea id="education" rows="2" placeholder="Kerala University | B.Tech Computer Science | May 2020"></textarea>
+      </div>
+      <div class="field">
+        <label>Skills (Technical + Soft)</label>
+        <div class="hint">Comma-separated — AI will format them cleanly</div>
+        <textarea id="skills" rows="3" placeholder="Python, SQL, React, Node.js, Figma, Agile, Communication, Problem-solving"></textarea>
+      </div>
+      <div class="field">
+        <label>Certifications <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+        <textarea id="certifications" rows="2" placeholder="AWS Solutions Architect – Associate, 2023&#10;Google Analytics Certified, 2022"></textarea>
+      </div>
+    </div>
+
+    <div id="error-box" class="error-box" style="display:none;"></div>
+
+    <button class="btn-primary" onclick="buildResume()">Build My Resume →</button>
+  </div>
+</div>
+
+<script type="text/babel">
+  // ── State ──
+  let photoData = null; // { dataUrl, name, type }
+  let experiences = [{ company: "", title: "", dates: "", bullets: "" }];
+  let generatedResume = "";
+
+  // ── Example data ──
+  const EXAMPLE = {
+    fullName: "Priya Nair", phone: "+91 98400 12345", email: "priya.nair@email.com",
+    location: "Thiruvananthapuram, Kerala", linkedin: "linkedin.com/in/priyanair",
+    targetJob: "Senior Product Manager – SaaS / B2B Tech",
+    summaryPoints: "8 years in product management at B2B SaaS companies. Led 0-to-1 product launches. Strong data-driven decision-making. Cross-functional team leadership.",
+    experience: [
+      { company: "CloudOps Inc.", title: "Senior Product Manager", dates: "Jan 2021 – Present",
+        bullets: "Led roadmap for core platform used by 500+ enterprise clients\nDrove 38% increase in user retention through redesigned onboarding\nManaged cross-functional team of 12 (eng, design, data)\nLaunched 3 major releases ahead of schedule, reducing backlog by 40%" },
+      { company: "DataPulse Analytics", title: "Product Manager", dates: "Mar 2018 – Dec 2020",
+        bullets: "Owned end-to-end delivery of analytics dashboard adopted by 200+ customers\nReduced churn by 22% through targeted in-app engagement features\nCollaborated with sales to build ROI calculators, accelerating deal closures by 30%" },
+      { company: "TechStart Solutions", title: "Associate Product Manager", dates: "Jun 2016 – Feb 2018",
+        bullets: "Supported mobile app launch reaching 50,000 downloads in 6 months\nWrote PRDs and user stories for engineering sprints\nRan weekly stakeholder syncs and managed Jira board for 2 scrum teams" }
+    ],
+    education: "University of Kerala | B.S. Information Management | May 2016",
+    skills: "Product Roadmapping, Agile/Scrum, A/B Testing, SQL, Tableau, Jira, Figma, OKRs, Go-to-Market Strategy, Stakeholder Management",
+    certifications: "Certified Scrum Product Owner (CSPO) – Scrum Alliance, 2020\nGoogle Project Management Certificate, 2021"
+  };
+
+  function fillExample() {
+    document.getElementById("fullName").value = EXAMPLE.fullName;
+    document.getElementById("phone").value = EXAMPLE.phone;
+    document.getElementById("email").value = EXAMPLE.email;
+    document.getElementById("location").value = EXAMPLE.location;
+    document.getElementById("linkedin").value = EXAMPLE.linkedin;
+    document.getElementById("targetJob").value = EXAMPLE.targetJob;
+    document.getElementById("summaryPoints").value = EXAMPLE.summaryPoints;
+    document.getElementById("education").value = EXAMPLE.education;
+    document.getElementById("skills").value = EXAMPLE.skills;
+    document.getElementById("certifications").value = EXAMPLE.certifications;
+    experiences = EXAMPLE.experience.map(e => ({ ...e }));
+    renderRoles();
+  }
+
+  // ── Role management ──
+  function renderRoles() {
+    const list = document.getElementById("experience-list");
+    list.innerHTML = "";
+    experiences.forEach((exp, i) => {
+      const card = document.createElement("div");
+      card.className = "role-card";
+      card.innerHTML = `
+        <div class="role-label">Role ${i + 1}</div>
+        ${experiences.length > 1 ? `<button class="remove-btn" onclick="removeRole(${i})">×</button>` : ""}
+        <div class="grid-2">
+          <div class="field"><label>Company *</label><input value="${esc(exp.company)}" onchange="updateRole(${i},'company',this.value)" placeholder="Acme Corp" /></div>
+          <div class="field"><label>Job Title *</label><input value="${esc(exp.title)}" onchange="updateRole(${i},'title',this.value)" placeholder="Software Engineer" /></div>
+          <div class="field span-2"><label>Dates *</label><input value="${esc(exp.dates)}" onchange="updateRole(${i},'dates',this.value)" placeholder="Jan 2021 – Present" /></div>
+        </div>
+        <div class="field">
+          <label>Responsibilities &amp; Achievements (one per line) *</label>
+          <div class="hint">3–5 bullets. Include numbers where possible — AI will sharpen into achievement statements.</div>
+          <textarea rows="4" onchange="updateRole(${i},'bullets',this.value)" placeholder="Led development of X feature used by Y users&#10;Reduced load time by Z% through optimisation">${esc(exp.bullets)}</textarea>
+        </div>`;
+      list.appendChild(card);
+    });
+    document.getElementById("role-count").textContent = `${experiences.length} role${experiences.length !== 1 ? "s" : ""}`;
+  }
+
+  function esc(str) { return (str || "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+  function addRole() { experiences.push({ company: "", title: "", dates: "", bullets: "" }); renderRoles(); }
+  function removeRole(i) { experiences.splice(i, 1); renderRoles(); }
+  function updateRole(i, field, val) { experiences[i][field] = val; }
+
+  // ── Photo handling ──
+  function handlePhotoFile(file) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { alert("Please upload an image file."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Photo must be under 5MB."); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoData = { dataUrl: e.target.result, name: file.name, type: file.type };
+      document.getElementById("photo-dropzone").style.display = "none";
+      document.getElementById("photo-preview-box").style.display = "flex";
+      document.getElementById("photo-preview-img").src = photoData.dataUrl;
+      document.getElementById("photo-filename").textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById("photo-dropzone").classList.remove("drag");
+    handlePhotoFile(e.dataTransfer.files[0]);
+  }
+
+  function removePhoto() {
+    photoData = null;
+    document.getElementById("photo-file").value = "";
+    document.getElementById("photo-dropzone").style.display = "block";
+    document.getElementById("photo-preview-box").style.display = "none";
+  }
+
+  // ── View switching ──
+  function showForm() {
+    document.getElementById("form-view").style.display = "block";
+    document.getElementById("result-view").style.display = "none";
+    document.getElementById("loading-view").style.display = "none";
+  }
+  function showLoading() {
+    document.getElementById("form-view").style.display = "none";
+    document.getElementById("result-view").style.display = "none";
+    document.getElementById("loading-view").style.display = "flex";
+  }
+  function showResult() {
+    document.getElementById("form-view").style.display = "none";
+    document.getElementById("loading-view").style.display = "none";
+    document.getElementById("result-view").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Build resume ──
+  async function buildResume() {
+    const fullName  = document.getElementById("fullName").value.trim();
+    const phone     = document.getElementById("phone").value.trim();
+    const email     = document.getElementById("email").value.trim();
+    const location  = document.getElementById("location").value.trim();
+    const linkedin  = document.getElementById("linkedin").value.trim();
+    const targetJob = document.getElementById("targetJob").value.trim();
+    const summaryPoints = document.getElementById("summaryPoints").value.trim();
+    const education = document.getElementById("education").value.trim();
+    const skills    = document.getElementById("skills").value.trim();
+    const certifications = document.getElementById("certifications").value.trim();
+
+    const errBox = document.getElementById("error-box");
+
+    if (!fullName || !targetJob || !experiences[0].company) {
+      errBox.textContent = "Please fill in at least your name, target job, and one work experience.";
+      errBox.style.display = "block";
+      return;
+    }
+    errBox.style.display = "none";
+    showLoading();
+
+    const expText = experiences.map((e, i) =>
+      `Role ${i+1}: ${e.title} at ${e.company} (${e.dates})\nResponsibilities/Achievements:\n${e.bullets}`
+    ).join("\n\n");
+
+    const prompt = `You are an expert resume writer specializing in ATS-optimized resumes.
+
+Build a complete, professional, ATS-friendly resume using ONLY the information provided below. Follow these rules strictly:
+1. Use standard section headers: PROFESSIONAL SUMMARY, WORK EXPERIENCE, EDUCATION, SKILLS, CERTIFICATIONS
+2. Single column, plain text only — no tables, no graphics, no special characters except dashes
+3. Each experience bullet must start with a strong action verb and include measurable results where possible
+4. Naturally weave in keywords relevant to: ${targetJob}
+5. Date format: consistent (e.g. Jan 2021 – Present)
+6. Output ONLY the resume text — no preamble, no explanation, no markdown fences
+
+CANDIDATE INFORMATION:
+Name: ${fullName}
+Phone: ${phone}
+Email: ${email}
+Location: ${location}
+LinkedIn: ${linkedin}
+Target Role: ${targetJob}
+
+SUMMARY POINTS (draft a compelling 3-sentence summary using these): ${summaryPoints}
+
+WORK EXPERIENCE:
+${expText}
+
+EDUCATION: ${education}
+
+SKILLS: ${skills}
+
+CERTIFICATIONS: ${certifications}
+
+Now write the full resume:`;
+
+    try {
+      let messages;
+      if (photoData) {
+        messages = [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: photoData.type, data: photoData.dataUrl.split(",")[1] } },
+            { type: "text", text: `The above image is the candidate's profile photo.\n\n${prompt}` }
+          ]
+        }];
+      } else {
+        messages = [{ role: "user", content: prompt }];
+      }
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages })
+      });
+
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === "text")?.text || "";
+      if (!text) throw new Error("Empty response");
+
+      generatedResume = text;
+      document.getElementById("resume-output").textContent = text;
+
+      // Show/hide photo in result
+      if (photoData) {
+        document.getElementById("result-photo-header").style.display = "flex";
+        document.getElementById("result-photo-img").src = photoData.dataUrl;
+        document.getElementById("result-name-display").textContent = fullName;
+        document.getElementById("photo-tip").style.display = "flex";
+      } else {
+        document.getElementById("result-photo-header").style.display = "none";
+        document.getElementById("photo-tip").style.display = "none";
+      }
+
+      showResult();
+    } catch (e) {
+      showForm();
+      const errBox = document.getElementById("error-box");
+      errBox.textContent = "Something went wrong. Please check your connection and try again.";
+      errBox.style.display = "block";
+    }
+  }
+
+  function copyResume() {
+    navigator.clipboard.writeText(generatedResume).then(() => {
+      const btn = document.getElementById("copy-btn");
+      btn.textContent = "✓ Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy Resume"; btn.classList.remove("copied"); }, 2200);
+    });
+  }
+
+  // Init
+  renderRoles();
+</script>
+</body>
+</html>
